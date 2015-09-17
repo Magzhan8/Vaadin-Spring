@@ -21,11 +21,13 @@ import org.springframework.security.core.context.SecurityContextHolder;
 public interface UserPresenter {
     public void create(String username, String password,String email,String role);    
     public void delete(int id);    
-    public void update(String username, String password,String email,String role);    
+    public void update(String username, String password,String email,String role);
+    public void edit(String username,String password,String email,String image);  
     public List<Users> getUsers();
     public Users getUser(int id);    
     public Users getUser(String login);
     public Users getCurrent();
     public boolean hasRole(String role);
+    public String getImagePath();
     public void logout();
 }

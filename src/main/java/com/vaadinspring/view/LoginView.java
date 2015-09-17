@@ -9,10 +9,12 @@ package com.vaadinspring.view;
 import com.vaadin.data.validator.BeanValidator;
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener;
+import com.vaadin.server.FileResource;
 import com.vaadin.server.Page;
 import com.vaadin.server.Sizeable;
 import com.vaadin.ui.Alignment;
 import com.vaadin.ui.Button;
+import com.vaadin.ui.Image;
 import com.vaadin.ui.Notification;
 import com.vaadin.ui.Panel;
 import com.vaadin.ui.PasswordField;
@@ -20,7 +22,15 @@ import com.vaadin.ui.TextField;
 import com.vaadin.ui.VerticalLayout;
 import com.vaadinspring.components.CustomAuthenticationProvider;
 import com.vaadinspring.presenter.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.StringTokenizer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 /**
  *
  * @author m.zhaksygeldy
@@ -31,15 +41,13 @@ public class LoginView extends Panel implements View{
     public String password;
     public Authentication authentication;
     public CustomAuthenticationProvider cust;
-    public LoginView(){ 
-        setSizeFull();
-        loginPresenter=new LoginPresenterImpl();
-//        if(loginPresenter.hasRole("user")) Page.getCurrent().setUriFragment("#!user");
-//        if(loginPresenter.hasRole("admin")) Page.getCurrent().setUriFragment("#!admin");
-//        else{
+    public LoginView(){    
+            setSizeFull();
+            loginPresenter=new LoginPresenterImpl();
             final VerticalLayout layout=new VerticalLayout();
             layout.setSizeFull();   
             VerticalLayout innerLayout=loginLayout();
+            
             layout.addComponent(innerLayout);
             layout.setComponentAlignment(innerLayout, Alignment.MIDDLE_CENTER);
             setContent(layout);
@@ -84,14 +92,16 @@ public class LoginView extends Panel implements View{
     }
     
     public void navigateToView(){
-        getUI().getNavigator().addView("admin", new AdminView());
-        getUI().getNavigator().addView("user", new UserView());
+        
+       
         if(loginPresenter.getNavigatorView().equals("user")){            
             //getUI().getNavigator().addView("user", new UserView());
+            getUI().getNavigator().addView("user", new UserView());
             getUI().getNavigator().navigateTo("user");
         }
         else{
             //getUI().getNavigator().addView("admin", new AdminView());
+            getUI().getNavigator().addView("admin", new AdminView());
             getUI().getNavigator().navigateTo("admin");
         }
     }

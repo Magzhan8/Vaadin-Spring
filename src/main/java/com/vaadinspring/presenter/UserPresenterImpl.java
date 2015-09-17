@@ -7,7 +7,9 @@
 package com.vaadinspring.presenter;
 
 import com.vaadinspring.components.HibernateUtil;
+import com.vaadinspring.model.Role;
 import com.vaadinspring.model.Users;
+import java.io.Serializable;
 import java.util.List;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
@@ -24,12 +26,23 @@ public class UserPresenterImpl implements UserPresenter{
         user.setLogin(username);
         user.setPassword(password);
         user.setEmail(email);
-        user.setRole(role);
+        user.setRole(findRole(role));
         Session session =HibernateUtil.getSessionFactory().openSession();
         session.beginTransaction();
         session.save(user);
         session.getTransaction().commit();
         session.close();
+    }
+    
+    public Role findRole(String role_name){
+        Session session =HibernateUtil.getSessionFactory().openSession();
+        session.beginTransaction();
+        Criteria cr = session.createCriteria(Role.class);
+        cr.add(Restrictions.eq("role_name", role_name));
+        Role role=(Role) cr.uniqueResult();
+        session.getTransaction().commit();
+        session.close();
+        return role;
     }
     
     public void delete(int id){
@@ -45,7 +58,20 @@ public class UserPresenterImpl implements UserPresenter{
         Users newUser=getUser(username);
         newUser.setPassword(password);
         newUser.setEmail(email);
-        newUser.setRole(role);
+        newUser.setRole(findRole(role));
+        Session session =HibernateUtil.getSessionFactory().openSession();
+        session.beginTransaction();
+        Users user=(Users) session.merge(newUser);
+        session.saveOrUpdate(user);
+        session.getTransaction().commit();
+        session.close();
+    }
+    
+    public void edit(String username, String password,String email,String image){
+        Users newUser=getUser(username);
+        newUser.setPassword(password);
+        newUser.setEmail(email);
+        newUser.setImage(image);
         Session session =HibernateUtil.getSessionFactory().openSession();
         session.beginTransaction();
         Users user=(Users) session.merge(newUser);
@@ -56,10 +82,8 @@ public class UserPresenterImpl implements UserPresenter{
     
     public List<Users> getUsers(){
         Session session =HibernateUtil.getSessionFactory().openSession();
-        System.out.println(2);
         session.beginTransaction();
         Criteria cr = session.createCriteria(Users.class);
-        cr.add(Restrictions.eq("role", "user"));
         List<Users> users=cr.list();
         session.getTransaction().commit();
         session.close();
@@ -100,5 +124,10 @@ public class UserPresenterImpl implements UserPresenter{
         if(role.equals(SecurityContextHolder.getContext().getAuthentication().getAuthorities().iterator().next().getAuthority()))
         return true;
         else return false;
+    }
+
+    public String getImagePath() {
+        String path=this.getClass().getClassLoader().getResource("").toString();
+        return path.substring(6,path.length()-49)+"src/main/resources/images/";
     }
 }

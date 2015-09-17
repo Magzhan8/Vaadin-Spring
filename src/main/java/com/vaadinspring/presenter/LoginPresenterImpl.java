@@ -12,6 +12,7 @@ import com.vaadinspring.model.Users;
 import com.vaadinspring.view.AdminView;
 import com.vaadinspring.view.LoginView;
 import com.vaadinspring.view.UserView;
+import java.io.Serializable;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -20,7 +21,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
  *
  * @author m.zhaksygeldy
  */
-public class LoginPresenterImpl implements LoginPresenter{
+public class LoginPresenterImpl implements Serializable, LoginPresenter{
     private CustomAuthenticationProvider authProvider;
     private Authentication auth;
     public LoginPresenterImpl(){

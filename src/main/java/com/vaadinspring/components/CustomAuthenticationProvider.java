@@ -2,7 +2,9 @@ package com.vaadinspring.components;
 
 
 import com.vaadinspring.model.Users;
-import com.vaadinspring.service.UsersService;
+import com.vaadinspring.presenter.UserPresenter;
+import com.vaadinspring.presenter.UserPresenterImpl;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -26,15 +28,15 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class CustomAuthenticationProvider implements AuthenticationProvider {
-   public UsersService service=new UsersService();
+   public UserPresenter userPresenter=new UserPresenterImpl();
    @Override
    public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         String name = authentication.getName();
         String password = authentication.getCredentials().toString();
-        Users user=service.getUser(name);
+        Users user=userPresenter.getUser(name);
         if (user.getLogin()!=null && password.equals(user.getPassword())) {
             List<GrantedAuthority> grantedAuths = new ArrayList<GrantedAuthority>(1);
-            grantedAuths.add(new SimpleGrantedAuthority(user.getRole()));
+            grantedAuths.add(new SimpleGrantedAuthority(user.getRole().getRole_name()));
             Authentication auth = new UsernamePasswordAuthenticationToken(name, password, grantedAuths);
             SecurityContextHolder.getContext().setAuthentication(auth);
             return auth;

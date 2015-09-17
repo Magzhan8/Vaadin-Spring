@@ -6,6 +6,7 @@
 
 package com.vaadinspring.model;
 
+import java.io.Serializable;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -18,35 +19,37 @@ import org.hibernate.validator.constraints.NotBlank;
  * @author m.zhaksygeldy
  */
 @Entity
-public class Users {
+public class Users implements Serializable {
    
    @Id
    @GeneratedValue
-   private int UserId;
+   private int user_id;
    
    @NotBlank(message="Login cannot be blank")
-   @Size(min=5, max=15)
+//   @Size(min=5, max=15)
    private String login;
    
    @NotBlank(message="Password cannot be blank")
-   @Size(min=5, max=15)
+//   @Size(min=5, max=15)
    private String password;
    
    @NotBlank(message="Email cannot be blank")
-   @Email
+//   @Email
    private String email;
    
-   @NotBlank(message="Role cannot be blank")
-   private String role; 
+   private String image="default.jpg"; 
    
-   private String image="default.jpg";
-
+   @ManyToOne(cascade = CascadeType.ALL)
+   @JoinTable(name = "user_role", joinColumns = { @JoinColumn(name = "user_id") }, inverseJoinColumns = { @JoinColumn(name = "role_id") })
+   private Role role; 
+   
+   
     public int getUserId() {
-        return UserId;
+        return user_id;
     }
 
-    public void setUserId(int UserId) {
-        this.UserId = UserId;
+    public void setUserId(int user_id) {
+        this.user_id = user_id;
     }
    
    public String getLogin() {
@@ -73,14 +76,6 @@ public class Users {
         this.email = email;
     }
 
-    public String getRole() {
-        return role;
-    }
-
-    public void setRole(String role) {
-        this.role = role;
-    }
-
     public String getImage() {
         return image;
     }
@@ -89,4 +84,12 @@ public class Users {
         this.image = image;
     }
    
+
+    public Role getRole(){
+        return this.role;
+    }
+    
+    public void setRole(Role role){
+        this.role=role;
+    }
 }

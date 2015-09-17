@@ -115,7 +115,7 @@ public class AdminView extends Panel implements View{
         });
         t4.addFocusListener(e->{
             t4.setImmediate(true);
-            t4.addValidator(new BeanValidator(com.vaadinspring.model.Users.class, "role"));
+            t4.addValidator(new BeanValidator(com.vaadinspring.model.Role.class, "role_name"));
         });        
 
         layout.addComponent(t1);
@@ -156,7 +156,7 @@ public class AdminView extends Panel implements View{
             t1.setValue(userPresenter.getUser(itemId).getLogin());
             t2.setValue(userPresenter.getUser(itemId).getPassword());
             t3.setValue(userPresenter.getUser(itemId).getEmail());
-            t4.setValue(userPresenter.getUser(itemId).getRole());         
+            t4.setValue(userPresenter.getUser(itemId).getRole().getRole_name());         
             
             t1.addFocusListener(e->{
                 t1.setImmediate(true);
@@ -172,7 +172,7 @@ public class AdminView extends Panel implements View{
             });
             t4.addFocusListener(e->{
                 t4.setImmediate(true);
-                t4.addValidator(new BeanValidator(com.vaadinspring.model.Users.class, "role"));
+                t4.addValidator(new BeanValidator(com.vaadinspring.model.Role.class, "role_name"));
             });
             
             layout.setSizeUndefined();
@@ -201,13 +201,13 @@ public class AdminView extends Panel implements View{
     public void populateTable(){
         userTable=createTable();
         for(int i=0;i<userPresenter.getUsers().size();i++){
-            userTable.addItem(new Object[]{userPresenter.getUsers().get(i).getLogin(),userPresenter.getUsers().get(i).getPassword(),userPresenter.getUsers().get(i).getEmail(),userPresenter.getUsers().get(i).getRole()},userPresenter.getUsers().get(i).getUserId());
+            userTable.addItem(new Object[]{userPresenter.getUsers().get(i).getLogin(),userPresenter.getUsers().get(i).getPassword(),userPresenter.getUsers().get(i).getEmail(),userPresenter.getUsers().get(i).getRole().getRole_name()},userPresenter.getUsers().get(i).getUserId());
         }        
     }
     
     public Table populateTable(Table table){
         for(int i=0;i<userPresenter.getUsers().size();i++){
-            table.addItem(new Object[]{userPresenter.getUsers().get(i).getLogin(),userPresenter.getUsers().get(i).getPassword(),userPresenter.getUsers().get(i).getEmail(),userPresenter.getUsers().get(i).getRole()},userPresenter.getUsers().get(i).getUserId());
+            table.addItem(new Object[]{userPresenter.getUsers().get(i).getLogin(),userPresenter.getUsers().get(i).getPassword(),userPresenter.getUsers().get(i).getEmail(),userPresenter.getUsers().get(i).getRole().getRole_name()},userPresenter.getUsers().get(i).getUserId());
         }
         return table;
     }

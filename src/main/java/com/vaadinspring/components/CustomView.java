@@ -15,12 +15,15 @@ import com.vaadin.ui.*;
 import com.vaadinspring.model.Users;
 import com.vaadinspring.presenter.UserPresenter;
 import com.vaadinspring.presenter.UserPresenterImpl;
-import com.vaadinspring.service.UsersService;
 import com.vaadinspring.ui.MyUI;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
+import java.io.Serializable;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 /**
@@ -33,10 +36,11 @@ public class CustomView extends Panel implements View{
     public Users currentUser;
     public File file1;
     public Image mainImage;
-    public Window editWindow;
-    public UsersService service=new UsersService();
+    public Window editWindow;        
+    public String path;
     public GridLayout getTemplate()
     { 
+        path=returnPath();
         userPresenter=new UserPresenterImpl();
         GridLayout grid=createMainLayout();
         HorizontalLayout header=getHeaderLayout();    
@@ -80,7 +84,7 @@ public class CustomView extends Panel implements View{
         sideBar.setSpacing(true);
         sideBar.setMargin(true);
         Label login=new Label(userPresenter.getCurrent().getLogin());
-        FileResource file=new FileResource(new File("C:\\Users\\m.zhaksygeldy\\Desktop\\spring-integration\\src\\images\\"+userPresenter.getCurrent().getImage()));
+        FileResource file=new FileResource(new File(path+userPresenter.getCurrent().getImage()));
         mainImage=new Image(null,file);        
         
         Button edit=new Button("Edit");
@@ -113,42 +117,41 @@ public class CustomView extends Panel implements View{
     }
     
     public Window createEditWindow()
-    {
+    {   
         final String login=userPresenter.getCurrent().getLogin();
         String password=userPresenter.getCurrent().getPassword();
         String email=userPresenter.getCurrent().getEmail();
-        final String role=userPresenter.getCurrent().getRole();
+        final String role=userPresenter.getCurrent().getRole().getRole_name();        
         final Window userWindow=new Window();
         userWindow.setModal(true);
-        FileResource file=new FileResource(new File("C:\\Users\\m.zhaksygeldy\\Desktop\\spring-integration\\src\\images\\"+userPresenter.getCurrent().getImage()));
+        FileResource file=new FileResource(new File(path+userPresenter.getCurrent().getImage()));
         final Image image=new Image(null,file);
         image.setWidth("180px"); 
         image.setHeight("240px");
-             
         Upload upload = new Upload("", new Upload.Receiver() {
             @Override
             public OutputStream receiveUpload(String filename, String mimeType) {
                 imageName=filename;
-                FileOutputStream fos=null; 
-                try {            
-                    file1=new File("C:\\Users\\m.zhaksygeldy\\Desktop\\spring-integration\\src\\images\\"+filename);
+                FileOutputStream fos=null;
+                try {  
+                    file1=new File(path+filename);
                     fos=new FileOutputStream(file1);
                 } catch (FileNotFoundException ex) {
                     Notification.show(ex.getMessage());
+                } catch (IOException ex) {
+                    Logger.getLogger(CustomView.class.getName()).log(Level.SEVERE, null, ex);
                 }
                 return fos;             
             }
         });
-        //upload.setButtonCaption("Upload here");
+        
         upload.addSucceededListener(new Upload.SucceededListener() {
-
             @Override
             public void uploadSucceeded(Upload.SucceededEvent event) {
-               image.setSource(new FileResource(file1));             
-            }            
+                    image.setSource(new FileResource(file1));
+                
+            }
         });
-        
-
         VerticalLayout layout = new VerticalLayout();
         layout.setSpacing(true);
         layout.setMargin(true);
@@ -162,8 +165,7 @@ public class CustomView extends Panel implements View{
         t3.setValue(email);        
         t4.setValue(role);
         t1.setReadOnly(true);
-        t4.setReadOnly(true); 
-        
+        t4.setReadOnly(true);
         t2.addFocusListener(e->{
             t2.setImmediate(true);
             t2.addValidator(new BeanValidator(com.vaadinspring.model.Users.class, "password"));
@@ -172,19 +174,18 @@ public class CustomView extends Panel implements View{
             t3.setImmediate(true);
             t3.addValidator(new BeanValidator(com.vaadinspring.model.Users.class, "email"));
         });
-        
         save.addClickListener(e-> {
-                if(t2.isValid() && t3.isValid()){
-                    userPresenter.update(login, t2.getValue(), t3.getValue(), role);
-                    userWindow.close();
-                }
+            if(t2.isValid() && t3.isValid()){
+                userPresenter.edit(login, t2.getValue(), t3.getValue(), imageName);
+                mainImage.setSource(new FileResource(file1));
+                userWindow.close();
+            }
         });
         layout.addComponent(image);
-        layout.addComponent(upload);        
+        layout.addComponent(upload);
         layout.addComponents(t1,t2,t3,t4); 
         layout.addComponent(save);
-        
-        userWindow.setContent(layout);
+        userWindow.setContent(layout);            
         return userWindow;
     }
     
@@ -192,7 +193,13 @@ public class CustomView extends Panel implements View{
         UI.getCurrent().addWindow(window);
     }
     
+    public String returnPath(){
+        String path=this.getClass().getClassLoader().getResource("").toString();
+        path=path.substring(6,path.length()-49)+"/images/";
+        return path;
+    }
+    
     public void enter(ViewChangeListener.ViewChangeEvent event) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    
     }
 }
