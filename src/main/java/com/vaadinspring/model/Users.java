@@ -10,6 +10,7 @@ import java.io.Serializable;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import org.hibernate.annotations.Cascade;
 import org.hibernate.validator.constraints.Email;
 import org.hibernate.validator.constraints.NotBlank;
         
@@ -39,7 +40,7 @@ public class Users implements Serializable {
    
    private String image="default.jpg"; 
    
-   @ManyToOne(cascade = CascadeType.ALL)
+   @ManyToOne
    @JoinTable(name = "user_role", joinColumns = { @JoinColumn(name = "user_id") }, inverseJoinColumns = { @JoinColumn(name = "role_id") })
    private Role role; 
    

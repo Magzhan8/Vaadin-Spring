@@ -7,107 +7,85 @@
 package com.vaadinspring.view;
 
 import com.vaadin.data.validator.BeanValidator;
-import com.vaadin.navigator.View;
-import com.vaadin.navigator.ViewChangeListener;
-import com.vaadin.server.FileResource;
-import com.vaadin.server.Page;
-import com.vaadin.server.Sizeable;
-import com.vaadin.ui.Alignment;
-import com.vaadin.ui.Button;
-import com.vaadin.ui.Image;
-import com.vaadin.ui.Notification;
-import com.vaadin.ui.Panel;
-import com.vaadin.ui.PasswordField;
-import com.vaadin.ui.TextField;
-import com.vaadin.ui.VerticalLayout;
+import com.vaadin.navigator.*;
+import com.vaadin.server.*;
+import com.vaadin.ui.*;
 import com.vaadinspring.components.CustomAuthenticationProvider;
 import com.vaadinspring.presenter.*;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.util.StringTokenizer;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 /**
  *
  * @author m.zhaksygeldy
  */
 public class LoginView extends Panel implements View{
     private LoginPresenter loginPresenter;
-    public String username;
-    public String password;
-    public Authentication authentication;
-    public CustomAuthenticationProvider cust;
-    public LoginView(){    
-            setSizeFull();
-            loginPresenter=new LoginPresenterImpl();
-            final VerticalLayout layout=new VerticalLayout();
-            layout.setSizeFull();   
-            VerticalLayout innerLayout=loginLayout();
-            
-            layout.addComponent(innerLayout);
-            layout.setComponentAlignment(innerLayout, Alignment.MIDDLE_CENTER);
-            setContent(layout);
-//        }     
+    private TextField usernameField;
+    private PasswordField passwordField;
+    private Button loginButton;
+    
+    public LoginView(){ 
+        loginPresenter=new LoginPresenterImpl();
+        usernameField=new TextField("Username");
+        passwordField=new PasswordField("Password");
+        loginButton=new Button("Login");
+        setSizeFull();        
+        VerticalLayout loginLayout=new VerticalLayout();
+        VerticalLayout innerLayout=createLoginLayout();
+        addFieldValidators();
+        onLoginButtonClick();
+        loginLayout.setSizeFull(); 
+        loginLayout.addComponent(innerLayout);
+        loginLayout.setComponentAlignment(innerLayout, Alignment.MIDDLE_CENTER);
+        setContent(loginLayout);
     }
     
-    public VerticalLayout loginLayout(){
-        final VerticalLayout innerLayout=new VerticalLayout();
+    public VerticalLayout createLoginLayout(){
+        VerticalLayout innerLayout=new VerticalLayout();
         innerLayout.setSpacing(true);
         innerLayout.setWidth(200, Sizeable.Unit.PIXELS);
         innerLayout.setHeightUndefined();
         innerLayout.setMargin(true);
-        innerLayout.setPrimaryStyleName("login");        
-        final TextField username=new TextField("Username");
-        final PasswordField password=new PasswordField("Password");
-        Button login=new Button("Login");
-                
-        username.addFocusListener(e->{
-            username.setImmediate(true);
-            username.addValidator(new BeanValidator(com.vaadinspring.model.Users.class, "login"));
-        });
-        password.addFocusListener(e->{
-            password.setImmediate(true);
-            password.addValidator(new BeanValidator(com.vaadinspring.model.Users.class, "password"));
-        });
-        login.addClickListener(e->{
-            if(username.isValid() && password.isValid()){
-            boolean log=loginPresenter.doLogin(username.getValue(), password.getValue());
-                if(log){
-                    navigateToView();
-                }
-                else loginError("Bad credentials","try again");
-            }
-        });
-        
-        
-        innerLayout.addComponent(username);
-        innerLayout.addComponent(password);
-        innerLayout.addComponent(login);
-        innerLayout.setComponentAlignment(login, Alignment.MIDDLE_CENTER);
+        innerLayout.setPrimaryStyleName("login"); 
+        innerLayout.addComponent(usernameField);
+        innerLayout.addComponent(passwordField);
+        innerLayout.addComponent(loginButton);
+        innerLayout.setComponentAlignment(loginButton, Alignment.MIDDLE_CENTER);
         return innerLayout;
     }
     
-    public void navigateToView(){
-        
-       
-        if(loginPresenter.getNavigatorView().equals("user")){            
-            //getUI().getNavigator().addView("user", new UserView());
+    public void addFieldValidators(){
+        usernameField.addFocusListener(e->{
+            usernameField.setImmediate(true);
+            usernameField.addValidator(new BeanValidator(com.vaadinspring.model.Users.class, "login"));
+        });
+        passwordField.addFocusListener(e->{
+            passwordField.setImmediate(true);
+            passwordField.addValidator(new BeanValidator(com.vaadinspring.model.Users.class, "password"));
+        });
+    }
+    
+    public void onLoginButtonClick(){
+        loginButton.addClickListener(e->{
+            if(usernameField.isValid() && passwordField.isValid()){
+                boolean successLogin=loginPresenter.doLogin(usernameField.getValue(),passwordField.getValue());
+                if(successLogin) navigateAfterLogin();
+                else showLoginError();
+            }
+        });
+    }    
+    
+    public void navigateAfterLogin(){    
+        if(loginPresenter.getNavigatorView().equals("user")){       
             getUI().getNavigator().addView("user", new UserView());
             getUI().getNavigator().navigateTo("user");
         }
-        else{
-            //getUI().getNavigator().addView("admin", new AdminView());
+        else{;
             getUI().getNavigator().addView("admin", new AdminView());
             getUI().getNavigator().navigateTo("admin");
         }
     }
     
-    public void loginError(String main,String detail){
-        Notification loginError=new Notification(main,detail,Notification.TYPE_ERROR_MESSAGE);
+    public void showLoginError(){
+        Notification loginError=new Notification("Bad Credentials","Try Again",Notification.TYPE_ERROR_MESSAGE);
         loginError.setDelayMsec(1000);
         loginError.show(Page.getCurrent());
     }

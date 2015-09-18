@@ -19,10 +19,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
  * @author m.zhaksygeldy
  */
 public interface UserPresenter {
-    public void create(String username, String password,String email,String role);    
+    public void create(List<String> createList);    
     public void delete(int id);    
-    public void update(String username, String password,String email,String role);
-    public void edit(String username,String password,String email,String image);  
+    public void update(List<String> updateList);
+    public void edit(List<String> editList);  
     public List<Users> getUsers();
     public Users getUser(int id);    
     public Users getUser(String login);

@@ -12,6 +12,7 @@ import com.vaadinspring.model.Users;
 import java.io.Serializable;
 import java.util.List;
 import org.hibernate.Criteria;
+import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -21,13 +22,13 @@ import org.springframework.security.core.context.SecurityContextHolder;
  * @author m.zhaksygeldy
  */
 public class UserPresenterImpl implements UserPresenter{
-    public void create(String username, String password,String email,String role){
+    public void create(List<String> createList){
         Users user=new Users();
-        user.setLogin(username);
-        user.setPassword(password);
-        user.setEmail(email);
-        user.setRole(findRole(role));
-        Session session =HibernateUtil.getSessionFactory().openSession();
+        user.setLogin(createList.get(0));
+        user.setPassword(createList.get(1));
+        user.setEmail(createList.get(2));
+        user.setRole(findRole(createList.get(3)));
+        Session session=HibernateUtil.getSessionFactory().openSession();
         session.beginTransaction();
         session.save(user);
         session.getTransaction().commit();
@@ -54,12 +55,12 @@ public class UserPresenterImpl implements UserPresenter{
         session.close();
     }
     
-    public void update(String username, String password,String email,String role){
-        Users newUser=getUser(username);
-        newUser.setPassword(password);
-        newUser.setEmail(email);
-        newUser.setRole(findRole(role));
-        Session session =HibernateUtil.getSessionFactory().openSession();
+    public void update(List<String> updateList){
+        Users newUser=getUser(updateList.get(0));
+        newUser.setPassword(updateList.get(1));
+        newUser.setEmail(updateList.get(2));
+        newUser.setRole(findRole(updateList.get(3)));
+        Session session=HibernateUtil.getSessionFactory().openSession();
         session.beginTransaction();
         Users user=(Users) session.merge(newUser);
         session.saveOrUpdate(user);
@@ -67,11 +68,11 @@ public class UserPresenterImpl implements UserPresenter{
         session.close();
     }
     
-    public void edit(String username, String password,String email,String image){
-        Users newUser=getUser(username);
-        newUser.setPassword(password);
-        newUser.setEmail(email);
-        newUser.setImage(image);
+    public void edit(List<String> editList){
+        Users newUser=getUser(editList.get(0));
+        newUser.setPassword(editList.get(1));
+        newUser.setEmail(editList.get(2));
+        newUser.setImage(editList.get(4));
         Session session =HibernateUtil.getSessionFactory().openSession();
         session.beginTransaction();
         Users user=(Users) session.merge(newUser);
@@ -89,7 +90,7 @@ public class UserPresenterImpl implements UserPresenter{
         session.close();
         return users;
     }
-
+    
     public Users getUser(int id) {
         Session session =HibernateUtil.getSessionFactory().openSession();
         session.beginTransaction();

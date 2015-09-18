@@ -26,8 +26,7 @@ public class UserView extends Panel implements View{
     public UserView(){
         setSizeFull();
         userPresenter=new UserPresenterImpl();
-        customView=new CustomView();
-        mainLayout=customView.getTemplate();
+        mainLayout=new CustomView();
         contentLayout=new VerticalLayout();
         contentLayout.setHeightUndefined();
         contentLayout.setSpacing(true);

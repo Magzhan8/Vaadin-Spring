@@ -6,187 +6,170 @@
 
 package com.vaadinspring.components;
 
-import com.vaadin.data.validator.BeanValidator;
-import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener;
 import com.vaadin.server.FileResource;
 import com.vaadin.server.Page;
 import com.vaadin.ui.*;
-import com.vaadinspring.model.Users;
 import com.vaadinspring.presenter.UserPresenter;
 import com.vaadinspring.presenter.UserPresenterImpl;
-import com.vaadinspring.ui.MyUI;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.Serializable;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.springframework.security.core.context.SecurityContextHolder;
 
 /**
  *
  * @author m.zhaksygeldy
  */
-public class CustomView extends Panel implements View{
+public class CustomView extends GridLayout{
     private UserPresenter userPresenter;
-    public String imageName;
-    public Users currentUser;
-    public File file1;
-    public Image mainImage;
-    public Window editWindow;        
-    public String path;
-    public GridLayout getTemplate()
-    { 
-        path=returnPath();
+    private PersonalInfoLayout editLayout;
+    private GridLayout mainLayout;
+    private HorizontalLayout headerLayout;
+    private GridLayout sidebarLayout;
+    private Button editButton;
+    private Button logoutButton;
+    private File newImageFile;
+    private Image mainImage;
+    private Image newImage;
+    private String newImageName;
+    private Upload imageUploader; 
+    private Window editWindow;        
+    private String path;
+    
+    public CustomView(){
         userPresenter=new UserPresenterImpl();
-        GridLayout grid=createMainLayout();
-        HorizontalLayout header=getHeaderLayout();    
-        GridLayout v2=getSidebarLayout(); 
-        editWindow=createEditWindow();
+        path=returnPath();
+        this.setSizeFull();
+        this.setColumns(2);
+        this.setRows(2);
+        this.setColumnExpandRatio(0, 1);
+        this.setColumnExpandRatio(1, 3);
+        this.setRowExpandRatio(0, 1);
+        this.setRowExpandRatio(1, 4);
         
-        grid.setSizeFull();
-        v2.setSizeFull();
-        header.setSizeFull();
-        grid.addComponent(header,0,0,1,0);
-        grid.addComponent(v2,0,1);
-        return grid;
+        this.createHeaderLayout();
+        this.createSidebarLayout();
+        
+        this.addComponent(headerLayout,0,0,1,0);
+        this.addComponent(sidebarLayout,0,1);
     }
     
-    public GridLayout createMainLayout(){
-        GridLayout grid=new GridLayout(2,2);        
-        
-        grid.setColumnExpandRatio(0, 1);
-        grid.setColumnExpandRatio(1, 3);
-        grid.setRowExpandRatio(0, 1);
-        grid.setRowExpandRatio(1, 4);
-        
-        return grid;
-    }
-    
-    public HorizontalLayout getHeaderLayout(){
-        HorizontalLayout header=new HorizontalLayout();
+    public void createHeaderLayout(){
+        headerLayout=new HorizontalLayout();
+        headerLayout.setSizeFull();
         Label welcome=new Label("You are welcome");
         welcome.addStyleName("welcome");
-        header.addComponent(welcome);
-        header.setComponentAlignment(welcome, Alignment.MIDDLE_CENTER);        
-        return header;        
+        headerLayout.addComponent(welcome);
+        headerLayout.setComponentAlignment(welcome, Alignment.MIDDLE_CENTER);       
     }    
     
-    public GridLayout getSidebarLayout(){
-        GridLayout sideBar= new GridLayout(7,10);
-        sideBar.setColumnExpandRatio(1, 2);
-        sideBar.setColumnExpandRatio(3, 2);
+    public void createSidebarLayout(){
+        sidebarLayout= new GridLayout(7,10);
+        sidebarLayout.setSizeFull();
+        sidebarLayout.setSpacing(true);
+        sidebarLayout.setMargin(true);
+        sidebarLayout.setDefaultComponentAlignment(Alignment.MIDDLE_LEFT);
+        sidebarLayout.setColumnExpandRatio(1, 2);
+        sidebarLayout.setColumnExpandRatio(3, 2);     
         
-        sideBar.setSizeFull();
-        sideBar.setSpacing(true);
-        sideBar.setMargin(true);
         Label login=new Label(userPresenter.getCurrent().getLogin());
         FileResource file=new FileResource(new File(path+userPresenter.getCurrent().getImage()));
-        mainImage=new Image(null,file);        
-        
-        Button edit=new Button("Edit");
-        Button logout=new Button("Logout");
-        
-        
+        mainImage=new Image(null,file); 
         mainImage.setWidth("180px"); 
-        mainImage.setHeight("240px");                
+        mainImage.setHeight("240px");  
+        this.createEditWindow();
+        this.createEditButton();
+        this.createLogoutButton();
         
-        edit.addClickListener(e-> {
-                showWindow(editWindow);
-        });        
-        logout.addClickListener(e-> {
-                userPresenter.logout();
-                Page.getCurrent().setLocation("");
-                UI.getCurrent().getSession().close();  
-        });
-        sideBar.setDefaultComponentAlignment(Alignment.MIDDLE_LEFT);
-        sideBar.addComponent(mainImage,1,1,3,1);
+        sidebarLayout.addComponent(mainImage,1,1,3,1);
         GridLayout inner=new GridLayout(6,2);        
         inner.setSizeFull();        
         inner.addComponent(login,1,0); 
-        inner.addComponent(edit,0,1);
-        inner.addComponent(logout,3,1);
-        sideBar.addComponent(inner,1,2,3,2);
-        //layout.setComponentAlignment(mainImage, Alignment.TOP_CENTER);
-        //layout.setComponentAlignment(login, Alignment.TOP_CENTER);
-        //layout.setComponentAlignment(grid, Alignment.TOP_CENTER);
-        return sideBar;        
+        inner.addComponent(editButton,0,1);
+        inner.addComponent(logoutButton,3,1);
+        sidebarLayout.addComponent(inner,1,2,3,2);
     }
     
-    public Window createEditWindow()
-    {   
-        final String login=userPresenter.getCurrent().getLogin();
-        String password=userPresenter.getCurrent().getPassword();
-        String email=userPresenter.getCurrent().getEmail();
-        final String role=userPresenter.getCurrent().getRole().getRole_name();        
-        final Window userWindow=new Window();
-        userWindow.setModal(true);
-        FileResource file=new FileResource(new File(path+userPresenter.getCurrent().getImage()));
-        final Image image=new Image(null,file);
-        image.setWidth("180px"); 
-        image.setHeight("240px");
-        Upload upload = new Upload("", new Upload.Receiver() {
+    public void createEditButton(){
+        editButton=new Button("Edit");
+        editButton.addClickListener(event->{
+            showWindow(editWindow);
+        });
+    }
+    
+    public void createLogoutButton(){
+        logoutButton=new Button("Logout");
+        logoutButton.addClickListener(event->{
+            userPresenter.logout();
+            Page.getCurrent().setLocation("");
+            UI.getCurrent().getSession().close(); 
+        });
+    }
+    
+    public void createEditWindow(){
+        editWindow=new Window();
+        editWindow.center();
+        editWindow.setHeightUndefined();
+        editWindow.setModal(true);
+        editLayout=new PersonalInfoLayout();
+        this.createNewImage();
+        this.createImageUploader();
+        editLayout.setAllFields(userPresenter.getCurrent());
+        editLayout.username.setReadOnly(true);
+        editLayout.role.setReadOnly(true);        
+        Button saveButton=new Button("Save"); 
+        
+        saveButton.addClickListener(event->{
+            if(editLayout.isValidFields()){
+                List<String> editInfoList=editLayout.getFieldValues();
+                editInfoList.add(newImageName);
+                userPresenter.edit(editInfoList);
+                mainImage.setSource(new FileResource(newImageFile));
+                editWindow.close();
+            }
+        });
+        
+        editLayout.addComponentAsFirst(imageUploader);
+        editLayout.addComponentAsFirst(newImage); 
+        editLayout.addComponent(saveButton);
+        editWindow.setContent(editLayout);
+    }
+    
+    public void createNewImage(){        
+        newImageFile=new File(path+userPresenter.getCurrent().getImage());
+        newImage=new Image(null,new FileResource(newImageFile));
+        newImage.setSource(new FileResource(newImageFile));
+        newImage.setWidth("180px"); 
+        newImage.setHeight("240px");
+    }       
+    
+    public void createImageUploader(){
+        imageUploader=new Upload("",new Upload.Receiver() {
             @Override
             public OutputStream receiveUpload(String filename, String mimeType) {
-                imageName=filename;
-                FileOutputStream fos=null;
-                try {  
-                    file1=new File(path+filename);
-                    fos=new FileOutputStream(file1);
-                } catch (FileNotFoundException ex) {
+                newImageName=filename;
+                FileOutputStream fos = null;
+                try{
+                    newImageFile=new File(path+newImageName);
+                    fos=new FileOutputStream(newImageFile);
+                }
+                catch (FileNotFoundException ex) {
                     Notification.show(ex.getMessage());
                 } catch (IOException ex) {
                     Logger.getLogger(CustomView.class.getName()).log(Level.SEVERE, null, ex);
                 }
-                return fos;             
+                return fos;               
             }
         });
         
-        upload.addSucceededListener(new Upload.SucceededListener() {
-            @Override
-            public void uploadSucceeded(Upload.SucceededEvent event) {
-                    image.setSource(new FileResource(file1));
-                
-            }
+        imageUploader.addSucceededListener(e->{
+            newImage.setSource(new FileResource(newImageFile));
         });
-        VerticalLayout layout = new VerticalLayout();
-        layout.setSpacing(true);
-        layout.setMargin(true);
-        TextField t1=new TextField("Login");
-        final TextField t2=new TextField("Password");
-        final TextField t3=new TextField("Email");
-        TextField t4=new TextField("Role");
-        Button save=new Button("Save");
-        t1.setValue(login);
-        t2.setValue(password);
-        t3.setValue(email);        
-        t4.setValue(role);
-        t1.setReadOnly(true);
-        t4.setReadOnly(true);
-        t2.addFocusListener(e->{
-            t2.setImmediate(true);
-            t2.addValidator(new BeanValidator(com.vaadinspring.model.Users.class, "password"));
-        });
-        t3.addFocusListener(e->{
-            t3.setImmediate(true);
-            t3.addValidator(new BeanValidator(com.vaadinspring.model.Users.class, "email"));
-        });
-        save.addClickListener(e-> {
-            if(t2.isValid() && t3.isValid()){
-                userPresenter.edit(login, t2.getValue(), t3.getValue(), imageName);
-                mainImage.setSource(new FileResource(file1));
-                userWindow.close();
-            }
-        });
-        layout.addComponent(image);
-        layout.addComponent(upload);
-        layout.addComponents(t1,t2,t3,t4); 
-        layout.addComponent(save);
-        userWindow.setContent(layout);            
-        return userWindow;
     }
     
     public void showWindow(Window window){
